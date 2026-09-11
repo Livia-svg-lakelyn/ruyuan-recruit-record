@@ -1,0 +1,34 @@
+name: Publish v23 APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v23.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+
+      - name: Download verified v23 artifact
+        run: |
+          curl -L --fail --retry 3 --retry-delay 2 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-304c-81f5-a0d0-16b9ee99027a/raw?se=2026-09-11T10%3A29%3A34Z&sp=r&sv=2026-02-06&sr=b&scid=076ae9ac-2fb6-5d38-a652-ec1f0f1cccd7&skoid=2757bbe4-5137-4324-975b-acedc0bad279&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-11T02%3A17%3A30Z&ske=2026-09-12T02%3A17%3A30Z&sks=b&skv=2026-02-06&sig=x/rNKl/ypdQDY/xgaDfzGAft9vPwJyeqrZ4yNXoDMPw%3D' -o v23-artifact.zip
+          echo 'a2367a7ed1878378a252cc20120991ef355068880d8ef619876978745d1eb97d  v23-artifact.zip' | sha256sum -c -
+          unzip -j v23-artifact.zip 'RuYuan-Recruit-Record-v23.apk' -d .
+          test -s RuYuan-Recruit-Record-v23.apk
+
+      - name: Replace public APK with v23
+        run: |
+          rm -f RuYuan-Recruit-Record-v22.apk
+          rm -f v23-artifact.zip
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publish RuYuan Recruit Record v23'
+          git push
